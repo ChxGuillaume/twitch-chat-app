@@ -52,14 +52,9 @@
                 authWindow.webContents.on('did-redirect-navigation', (event, url) => {
                     const accessToken = url.match(/access_token=([^&]*)/gi)[0].split('=')[1];
 
-                    console.log(accessToken, this.$store.state)
-
                     authWindow.close();
 
                     this.setToken(accessToken);
-
-                    console.log(accessToken, this.$store.state)
-
                     this.$router.push({name: 'dashboard'});
                 })
             },

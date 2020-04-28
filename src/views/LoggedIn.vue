@@ -1,36 +1,54 @@
 <template>
-    <v-container>
+    <v-container fluid>
         <v-row>
             <v-col class="text-center">
                 <h1>Hello World</h1>
             </v-col>
             <v-col cols="12">
-                <v-list>
-                    <v-list-item dense v-for="(msg, index) in chatMessages" :key="index">
-                        <v-list-item-content>
-                            <v-list-item-title><span :style="`color:${msg.owner.color}`">{{ msg.owner['display-name'] }}</span>: {{ msg.msg }}</v-list-item-title>
-                        </v-list-item-content>
-                    </v-list-item>
-                </v-list>
-            </v-col>
-            <v-col cols="12">
-                <v-text-field label="Message" color="#6441a5" v-model="message" @keydown="sendMessage"></v-text-field>
+                <v-card>
+                    <v-tabs v-model="channelSelected" background-color="primary" dark>
+                        <v-tab v-for="channel in channels" :key="channel">
+                            {{ channel }}
+                        </v-tab>
+                    </v-tabs>
+                    <v-tabs-items v-model="channelSelected">
+                        <v-tab-item v-for="channel in channels" :key="channel">
+                            <v-card flat>
+                                <chat :messages="chatMessages"
+                                      :channel="channel"
+                                      :badges="badges"/>
+                            </v-card>
+                        </v-tab-item>
+                    </v-tabs-items>
+                </v-card>
             </v-col>
         </v-row>
     </v-container>
 </template>
 
 <script>
-    const tmi = require('tmi.js');
+    import Chat from "../components/Chat";
+
+    // const tmi = require('tmi.js');
 
     export default {
         name: "LoggedIn",
+        components: {Chat},
         data() {
             return {
                 message: '',
                 badges: {},
-                chatClient: undefined,
-                chatMessages: [],
+                channels: [
+                    'nekotiki',
+                    'maghla',
+                    'at0mium',
+                    'zerator',
+                    'locklear',
+                ],
+                channelSelected: '',
+                channelBadges: {},
+                chatClient: null,
+                chatMessages: {},
             };
         },
         methods: {
@@ -47,45 +65,15 @@
                 .then(({data: {badge_sets}}) => {
                     this.badges = badge_sets;
                 });
-
-            // Define configuration options
-            const opts = {
-                identity: {
-                    username: 'nekotiki',
-                    password: this.$store.state.access_token,
-                },
-                channels: [
-                    'nekotiki',
-                    'at0mium',
-                ],
-            };
-
-            this.chatClient = new tmi.client(opts);
-
-            // Register our event handlers (defined below)
-            this.chatClient.on('message', (target, context, msg, self) => {
-                console.log(target, context, msg, self);
-                this.chatMessages.push({ owner: context, msg });
-            });
-
-            this.chatClient.on('connected', (addr, port) => {
-                console.log(`* Connected to ${addr}:${port}`);
-                setTimeout(() => {
-                    this.chatClient.raw('CAP REQ :twitch.tv/membership');
-                }, 3000);
-            });
-
-            this.chatClient.on('join', (channel, username, self) => {
-                console.log(channel, username, self);
-            });
-
-            this.chatClient.connect();
-        },
-        beforeDestroy() {
-            this.chatClient.disconnect();
-        },
+        }
     }
 </script>
+
+<style>
+    .v-tooltip__content {
+        opacity: 1 !important;
+    }
+</style>
 
 <style scoped>
 
